@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>La Septième Aube</title>
+<style>
+  :root {
+    --bg: #080b13;
+    --panel: rgba(18, 24, 38, 0.86);
+    --panel-2: rgba(29, 37, 56, 0.92);
+    --line: rgba(255,255,255,.10);
+    --text: #f3f5fb;
+    --muted: #9aa6bd;
+    --structure: #f0a95f;
+    --clarte: #6bd8ff;
+    --elan: #d98cff;
+    --danger: #ff6b7d;
+    --good: #75e7ae;
+    --gold: #ffd76a;
+    --shadow: 0 20px 60px rgba(0,0,0,.42);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  body { overflow-x: hidden; }
+  button { font: inherit; }
+  #stars { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: .75; }
+  .vignette { position: fixed; inset: 0; z-index: 1; pointer-events: none; background: radial-gradient(circle at 50% 35%, transparent 0, rgba(8,11,19,.22) 45%, rgba(5,6,12,.86) 100%); }
+  .app { position: relative; z-index: 2; min-height: 100vh; padding: 18px; display: grid; place-items: center; }
+  .shell { width: min(1180px, 100%); }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin-bottom:14px; }
+  .brand { display:flex; align-items:center; gap:12px; }
+  .sigil { width:42px; height:42px; border-radius:14px; display:grid; place-items:center; background: linear-gradient(145deg, rgba(107,216,255,.22), rgba(217,140,255,.16)); border:1px solid rgba(255,255,255,.12); box-shadow: inset 0 0 25px rgba(107,216,255,.08); font-weight:900; }
+  .title { font-weight:900; letter-spacing:.12em; font-size:clamp(15px,2vw,21px); }
+  .subtitle { color:var(--muted); font-size:12px; margin-top:2px; }
+  .meta { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+  .pill { background:rgba(255,255,255,.055); border:1px solid var(--line); padding:8px 11px; border-radius:999px; color:var(--muted); font-size:12px; backdrop-filter: blur(12px); }
+  .pill strong { color:var(--text); }
+
+  .screen { display:none; }
+  .screen.active { display:block; animation:fade .28s ease; }
+  @keyframes fade { from { opacity:0; transform:translateY(5px) } to { opacity:1; transform:none } }
+
+  .hero { min-height:min(720px, calc(100vh - 120px)); display:grid; grid-template-columns:1.15fr .85fr; gap:18px; }
+  .glass { background:linear-gradient(180deg, rgba(24,31,48,.88), rgba(13,17,29,.88)); border:1px solid var(--line); border-radius:26px; box-shadow:var(--shadow); backdrop-filter:blur(18px); }
+  .intro { padding:clamp(28px,5vw,62px); display:flex; flex-direction:column; justify-content:center; overflow:hidden; position:relative; }
+  .intro:before { content:""; position:absolute; width:360px; height:360px; border-radius:50%; left:-140px; top:-120px; background:radial-gradient(circle, rgba(107,216,255,.14), transparent 66%); }
+  .kicker { color:var(--gold); font-size:12px; letter-spacing:.22em; font-weight:800; text-transform:uppercase; }
+  h1 { font-size:clamp(42px,7vw,82px); line-height:.95; letter-spacing:-.055em; margin:18px 0 22px; max-width:780px; }
+  .lead { color:#c5ccda; max-width:650px; font-size:clamp(16px,2vw,20px); line-height:1.55; }
+  .rules { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:28px 0; }
+  .rule { padding:14px; border-radius:17px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.075); }
+  .rule b { display:block; margin-bottom:5px; }
+  .rule span { color:var(--muted); font-size:12px; line-height:1.35; }
+  .actions { display:flex; gap:12px; flex-wrap:wrap; }
+  .btn { border:0; cursor:pointer; border-radius:14px; padding:13px 18px; font-weight:850; color:#071018; background:linear-gradient(135deg, var(--gold), #ffb75e); box-shadow:0 12px 26px rgba(255,183,94,.16); transition:.15s ease; }
+  .btn:hover { transform:translateY(-2px); filter:brightness(1.04); }
+  .btn:active { transform:translateY(0) scale(.98); }
+  .btn.secondary { color:var(--text); background:rgba(255,255,255,.07); border:1px solid var(--line); box-shadow:none; }
+  .btn.danger { background:rgba(255,107,125,.12); color:#ff9aa7; border:1px solid rgba(255,107,125,.28); box-shadow:none; }
+  .btn:disabled { opacity:.42; cursor:not-allowed; transform:none; }
+
+  .preview { padding:22px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+  .orbital { width:min(420px,78vw); aspect-ratio:1; border-radius:50%; border:1px solid rgba(255,255,255,.10); display:grid; place-items:center; position:relative; box-shadow:inset 0 0 70px rgba(107,216,255,.05); }
+  .orbital:before, .orbital:after { content:""; position:absolute; border-radius:50%; border:1px solid rgba(255,255,255,.08); }
+  .orbital:before { inset:12%; }
+  .orbital:after { inset:29%; }
+  .core { width:34%; aspect-ratio:1; border-radius:50%; display:grid; place-items:center; text-align:center; background:radial-gradient(circle at 35% 30%, #fff2bd, #fd9f60 34%, #6d355f 70%, #171728); box-shadow:0 0 75px rgba(255,170,92,.35); font-weight:900; letter-spacing:.08em; font-size:12px; }
+  .sat { position:absolute; width:17%; aspect-ratio:1; border-radius:50%; display:grid; place-items:center; border:1px solid rgba(255,255,255,.17); background:rgba(17,22,36,.96); box-shadow:0 10px 25px rgba(0,0,0,.4); font-size:11px; font-weight:800; }
+  .sat.s1 { top:4%; left:42%; color:var(--structure); }
+  .sat.s2 { right:6%; bottom:22%; color:var(--clarte); }
+  .sat.s3 { left:8%; bottom:20%; color:var(--elan); }
+  .run-summary { position:absolute; bottom:22px; left:22px; right:22px; display:flex; justify-content:space-between; color:var(--muted); font-size:12px; }
+
+  .game-grid { display:grid; grid-template-columns:300px 1fr; gap:14px; }
+  .sidebar, .arena { padding:16px; }
+  .sidebar { display:flex; flex-direction:column; gap:12px; }
+  .night { padding:16px; border-radius:18px; background:rgba(255,255,255,.045); border:1px solid var(--line); }
+  .night-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:9px; }
+  .night-head b { letter-spacing:.08em; }
+  .turn-dots { display:flex; gap:5px; }
+  .dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.12); }
+  .dot.done { background:var(--good); }
+  .dot.current { background:var(--gold); box-shadow:0 0 12px rgba(255,215,106,.6); }
+  .threat-card { padding:15px; border-radius:18px; background:linear-gradient(145deg, rgba(255,107,125,.13), rgba(255,255,255,.035)); border:1px solid rgba(255,107,125,.22); min-height:150px; }
+  .threat-label { color:#ff98a6; font-weight:850; text-transform:uppercase; letter-spacing:.12em; font-size:10px; }
+  .threat-name { font-size:21px; font-weight:900; margin:12px 0 7px; }
+  .threat-desc { color:#c5ccda; font-size:13px; line-height:1.45; }
+  .damage-row { margin-top:14px; display:flex; gap:7px; flex-wrap:wrap; }
+  .damage { border-radius:999px; padding:6px 9px; font-size:11px; background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.08); }
+  .log { flex:1; min-height:110px; max-height:190px; overflow:auto; padding:12px; border-radius:15px; background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.06); color:var(--muted); font-size:12px; line-height:1.55; }
+  .log div + div { margin-top:4px; }
+
+  .arena { min-height:690px; display:flex; flex-direction:column; gap:14px; }
+  .resource-row { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .resource { padding:14px; border-radius:17px; background:rgba(255,255,255,.045); border:1px solid var(--line); position:relative; overflow:hidden; }
+  .resource-top { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .resource-name { font-size:11px; text-transform:uppercase; letter-spacing:.13em; color:var(--muted); font-weight:800; }
+  .resource-value { font-size:26px; font-weight:950; }
+  .bar { height:7px; border-radius:99px; background:rgba(255,255,255,.07); overflow:hidden; margin-top:10px; }
+  .bar > i { display:block; height:100%; border-radius:99px; transition:width .35s ease; }
+  .resource.structure .bar i { background:var(--structure); }
+  .resource.clarte .bar i { background:var(--clarte); }
+  .resource.elan .bar i { background:var(--elan); }
+  .resource.flash { animation:resourceFlash .35s ease; }
+  @keyframes resourceFlash { 50% { transform:scale(1.02); filter:brightness(1.3); } }
+
+  .statusline { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 14px; border-radius:16px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.06); }
+  .energy { display:flex; align-items:center; gap:7px; font-weight:900; }
+  .energy-orb { width:17px; height:17px; border-radius:50%; background:radial-gradient(circle at 35% 30%, #fff, var(--gold) 35%, #d7823f 70%); box-shadow:0 0 12px rgba(255,215,106,.45); }
+  .hint { color:var(--muted); font-size:12px; text-align:right; }
+
+  .hand-wrap { flex:1; display:flex; align-items:center; justify-content:center; min-height:330px; }
+  .hand { width:100%; display:flex; justify-content:center; align-items:flex-end; gap:10px; flex-wrap:wrap; }
+  .card { width:clamp(145px,17vw,190px); min-height:248px; border-radius:20px; padding:14px; border:1px solid rgba(255,255,255,.13); background:linear-gradient(160deg, rgba(38,48,70,.98), rgba(15,20,33,.98)); box-shadow:0 15px 35px rgba(0,0,0,.28); cursor:pointer; position:relative; overflow:hidden; transition:.16s ease; user-select:none; display:flex; flex-direction:column; }
+  .card:hover { transform:translateY(-9px) rotate(-.3deg); border-color:rgba(255,255,255,.28); }
+  .card:active { transform:translateY(-3px) scale(.98); }
+  .card.disabled { opacity:.42; cursor:not-allowed; filter:saturate(.45); }
+  .card.disabled:hover { transform:none; }
+  .card:before { content:""; position:absolute; width:130px; height:130px; border-radius:50%; right:-60px; top:-55px; background:radial-gradient(circle, var(--accent, rgba(255,255,255,.22)), transparent 68%); opacity:.55; }
+  .card-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+  .cost { width:32px; height:32px; border-radius:11px; display:grid; place-items:center; color:#17130a; background:var(--gold); font-weight:950; box-shadow:0 5px 14px rgba(255,215,106,.18); }
+  .type { color:var(--muted); font-size:10px; letter-spacing:.11em; text-transform:uppercase; font-weight:850; }
+  .card-icon { font-size:44px; margin:20px 0 13px; filter:drop-shadow(0 8px 15px rgba(0,0,0,.25)); }
+  .card-name { font-size:18px; font-weight:950; line-height:1.05; }
+  .card-text { margin-top:10px; color:#bec7d7; line-height:1.4; font-size:12px; flex:1; }
+  .card-tag { color:var(--accentText, var(--gold)); font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.1em; margin-top:12px; }
+  .card.played { animation:cardPlay .36s ease forwards; pointer-events:none; }
+  @keyframes cardPlay { to { opacity:0; transform:translateY(-90px) scale(.8) rotate(3deg); } }
+
+  .arena-actions { display:flex; justify-content:space-between; gap:10px; align-items:center; }
+  .deck-info { color:var(--muted); font-size:12px; }
+
+  .overlay { position:fixed; inset:0; z-index:20; display:none; place-items:center; padding:18px; background:rgba(4,6,11,.78); backdrop-filter:blur(12px); }
+  .overlay.show { display:grid; animation:fade .2s ease; }
+  .modal { width:min(920px,100%); max-height:min(820px,94vh); overflow:auto; padding:24px; border-radius:25px; background:linear-gradient(180deg, rgba(26,34,52,.98), rgba(11,15,26,.98)); border:1px solid rgba(255,255,255,.13); box-shadow:var(--shadow); }
+  .modal h2 { font-size:clamp(28px,5vw,48px); margin:5px 0 10px; letter-spacing:-.04em; }
+  .modal p { color:#c2cad8; line-height:1.55; }
+  .choices { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:22px 0; }
+  .choice { min-height:245px; width:100%; }
+  .modal-actions { display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; }
+  .ending-badge { display:inline-block; padding:7px 11px; border-radius:999px; background:rgba(117,231,174,.10); border:1px solid rgba(117,231,174,.24); color:var(--good); font-weight:850; font-size:12px; }
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:20px 0; }
+  .stat { padding:13px; border-radius:15px; background:rgba(255,255,255,.045); border:1px solid var(--line); }
+  .stat span { display:block; color:var(--muted); font-size:11px; margin-bottom:5px; }
+  .stat b { font-size:22px; }
+  .unlock { padding:13px; border-radius:15px; background:rgba(255,215,106,.08); border:1px solid rgba(255,215,106,.18); color:#ffe39a; margin:12px 0; }
+  .hidden { display:none !important; }
+  .shake { animation:shake .35s ease; }
+  @keyframes shake { 20%,60% { transform:translateX(-6px) } 40%,80% { transform:translateX(6px) } }
+  .float-text { position:fixed; z-index:50; pointer-events:none; font-weight:950; animation:floatUp .8s ease forwards; text-shadow:0 4px 10px rgba(0,0,0,.5); }
+  @keyframes floatUp { to { transform:translateY(-55px); opacity:0; } }
+
+  @media (max-width:900px) {
+    .hero { grid-template-columns:1fr; }
+    .preview { min-height:420px; }
+    .game-grid { grid-template-columns:1fr; }
+    .sidebar { display:grid; grid-template-columns:1fr 1fr; }
+    .log { grid-column:1/-1; }
+    .arena { min-height:auto; }
+  }
+  @media (max-width:640px) {
+    .app { padding:10px; }
+    .topbar { align-items:flex-start; }
+    .meta { gap:6px; }
+    .pill { padding:6px 8px; font-size:10px; }
+    .intro { padding:28px 22px; }
+    .rules { grid-template-columns:1fr; }
+    .preview { min-height:330px; }
+    .sidebar { grid-template-columns:1fr; }
+    .resource-row { gap:6px; }
+    .resource { padding:10px; }
+    .resource-value { font-size:21px; }
+    .resource-name { font-size:9px; }
+    .hand-wrap { min-height:410px; align-items:flex-start; }
+    .hand { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .card { width:100%; min-height:210px; padding:12px; }
+    .card-icon { font-size:31px; margin:12px 0 8px; }
+    .card-name { font-size:15px; }
+    .card-text { font-size:11px; }
+    .choices { grid-template-columns:1fr; }
+    .choice { min-height:210px; }
+    .stats { grid-template-columns:1fr 1fr; }
+    .hint { display:none; }
+  }
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="vignette"></div>
+<div class="app">
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="sigil">VII</div>
+        <div>
+          <div class="title">LA SEPTIÈME AUBE</div>
+          <div class="subtitle">micro-deckbuilder stratégique</div>
+        </div>
+      </div>
+      <div class="meta">
+        <div class="pill">Fragments <strong id="metaFragments">0</strong></div>
+        <div class="pill">Meilleur score <strong id="metaBest">0</strong></div>
+        <div class="pill">Fins <strong id="metaEndings">0/5</strong></div>
+      </div>
+    </header>
+
+    <section id="menuScreen" class="screen active">
+      <div class="hero">
+        <div class="glass intro">
+          <div class="kicker">Sept décisions avant le jour</div>
+          <h1>Maintiens la cité en vie jusqu’à l’aube.</h1>
+          <p class="lead">Trois équilibres. Une menace annoncée à chaque tour. Un petit paquet de cartes et aucune solution parfaite, parce que ce serait beaucoup trop reposant.</p>
+          <div class="rules">
+            <div class="rule"><b>Lis la menace</b><span>Chaque nuit annonce exactement ce qu’elle va frapper.</span></div>
+            <div class="rule"><b>Construis ton moteur</b><span>Ajoute une carte après chaque tour et cherche les synergies.</span></div>
+            <div class="rule"><b>Assume ta fin</b><span>Ta manière de survivre détermine l’issue de la partie.</span></div>
+          </div>
+          <div class="actions">
+            <button id="startBtn" class="btn">Commencer une partie</button>
+            <button id="helpBtn" class="btn secondary">Comment jouer</button>
+            <button id="resetBtn" class="btn danger">Effacer la progression</button>
+          </div>
+        </div>
+        <div class="glass preview">
+          <div class="orbital">
+            <div class="core">AUBE<br>07</div>
+            <div class="sat s1">STRUCTURE</div>
+            <div class="sat s2">CLARTÉ</div>
+            <div class="sat s3">ÉLAN</div>
+          </div>
+          <div class="run-summary"><span>Partie : 4 à 7 min</span><span>Sauvegarde locale</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="gameScreen" class="screen">
+      <div class="game-grid">
+        <aside class="glass sidebar">
+          <div class="night">
+            <div class="night-head">
+              <b id="nightLabel">NUIT 1 / 7</b>
+              <div id="turnDots" class="turn-dots"></div>
+            </div>
+            <div style="color:var(--muted);font-size:12px">Prépare tes systèmes, puis termine le tour.</div>
+          </div>
+          <div id="threatCard" class="threat-card">
+            <div class="threat-label">Menace annoncée</div>
+            <div id="threatName" class="threat-name">...</div>
+            <div id="threatDesc" class="threat-desc">...</div>
+            <div id="damageRow" class="damage-row"></div>
+          </div>
+          <div id="log" class="log" aria-live="polite"></div>
+        </aside>
+
+        <main class="glass arena">
+          <div class="resource-row">
+            <div id="res-structure" class="resource structure">
+              <div class="resource-top"><span class="resource-name">Structure</span><span id="structureVal" class="resource-value">7</span></div>
+              <div class="bar"><i id="structureBar" style="width:58%"></i></div>
+            </div>
+            <div id="res-clarte" class="resource clarte">
+              <div class="resource-top"><span class="resource-name">Clarté</span><span id="clarteVal" class="resource-value">7</span></div>
+              <div class="bar"><i id="clarteBar" style="width:58%"></i></div>
+            </div>
+            <div id="res-elan" class="resource elan">
+              <div class="resource-top"><span class="resource-name">Élan</span><span id="elanVal" class="resource-value">7</span></div>
+              <div class="bar"><i id="elanBar" style="width:58%"></i></div>
+            </div>
+          </div>
+
+          <div class="statusline">
+            <div class="energy"><span class="energy-orb"></span><span>Énergie : <b id="energyVal">3</b>/3</span></div>
+            <div id="comboText" class="hint">La première carte du tour peut déclencher un bonus.</div>
+          </div>
+
+          <div class="hand-wrap"><div id="hand" class="hand"></div></div>
+
+          <div class="arena-actions">
+            <div id="deckInfo" class="deck-info">Pioche 0 · Défausse 0 · Paquet 0</div>
+            <button id="endTurnBtn" class="btn">Affronter la menace</button>
+          </div>
+        </main>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div id="helpOverlay" class="overlay">
+  <div class="modal">
+    <div class="kicker">Mode d’emploi raisonnablement court</div>
+    <h2>Comment survivre</h2>
+    <p>Tu disposes de <b>3 points d’énergie</b> par nuit. Clique sur les cartes pour renforcer la Structure, la Clarté ou l’Élan. Quand tu termines le tour, la menace annoncée inflige ses dégâts.</p>
+    <p>Une ressource à zéro met fin à la partie. Après chaque nuit survécue, tu choisis une nouvelle carte. Les cartes rares se débloquent au fil des parties grâce aux fragments.</p>
+    <p><b>Raccourcis :</b> touches 1 à 5 pour jouer une carte, Entrée pour terminer le tour, Échap pour fermer une fenêtre.</p>
+    <div class="modal-actions"><button id="closeHelpBtn" class="btn">Compris</button></div>
+  </div>
+</div>
+
+<div id="draftOverlay" class="overlay">
+  <div class="modal">
+    <div class="kicker">Récompense de nuit</div>
+    <h2>Ajoute une carte</h2>
+    <p>Ton paquet devient plus puissant. Ou plus incohérent. La frontière est souvent purement marketing.</p>
+    <div id="draftChoices" class="choices"></div>
+  </div>
+</div>
+
+<div id="endOverlay" class="overlay">
+  <div class="modal">
+    <span id="endingBadge" class="ending-badge">Fin découverte</span>
+    <h2 id="endingTitle">...</h2>
+    <p id="endingText">...</p>
+    <div class="stats">
+      <div class="stat"><span>Score</span><b id="endScore">0</b></div>
+      <div class="stat"><span>Nuits</span><b id="endTurns">0</b></div>
+      <div class="stat"><span>Fragments gagnés</span><b id="endFragments">0</b></div>
+      <div class="stat"><span>Paquet final</span><b id="endDeck">0</b></div>
+    </div>
+    <div id="unlockBox" class="unlock hidden"></div>
+    <div class="modal-actions">
+      <button id="menuBtn" class="btn secondary">Retour au menu</button>
+      <button id="retryBtn" class="btn">Rejouer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const MAX_RESOURCE = 12;
+  const START_RESOURCE = 7;
+  const TURNS = 7;
+  const SAVE_KEY = 'septiemeAubeSave_v1';
+
+  const RESOURCE_META = {
+    structure: { label: 'Structure', color: '#f0a95f' },
+    clarte: { label: 'Clarté', color: '#6bd8ff' },
+    elan: { label: 'Élan', color: '#d98cff' }
+  };
+
+  const cards = {
+    fondation: {
+      id:'fondation', name:'Fondation', icon:'▰', cost:1, rarity:'Commune', accent:'rgba(240,169,95,.42)', accentText:'#ffc98e',
+      text:'+3 Structure. +1 supplémentaire si c’est la première carte du tour.',
+      play(g) { let v = 3 + (g.cardsPlayed === 0 ? 1 : 0); gain('structure', v); }
+    },
+    analyse: {
+      id:'analyse', name:'Analyse froide', icon:'◇', cost:1, rarity:'Commune', accent:'rgba(107,216,255,.42)', accentText:'#9ee8ff',
+      text:'+3 Clarté. Si ta Clarté est la plus basse, gagne encore +1.',
+      play(g) { const low = g.res.clarte <= Math.min(g.res.structure, g.res.elan); gain('clarte', 3 + (low ? 1 : 0)); }
+    },
+    impulsion: {
+      id:'impulsion', name:'Impulsion', icon:'↗', cost:1, rarity:'Commune', accent:'rgba(217,140,255,.42)', accentText:'#e8b8ff',
+      text:'+3 Élan. +1 si tu n’as plus qu’1 énergie avant de la jouer.',
+      play(g) { gain('elan', 3 + (g.energy === 1 ? 1 : 0)); }
+    },
+    redistribution: {
+      id:'redistribution', name:'Redistribution', icon:'⇄', cost:1, rarity:'Commune', accent:'rgba(117,231,174,.38)', accentText:'#9af3c6',
+      text:'+2 à la ressource la plus basse. +1 à une autre ressource au hasard.',
+      play(g) {
+        const keys = lowestResources();
+        const low = keys[Math.floor(Math.random()*keys.length)];
+        gain(low, 2);
+        const others = Object.keys(g.res).filter(k => k !== low);
+        gain(others[Math.floor(Math.random()*others.length)], 1);
+      }
+    },
+    reserve: {
+      id:'reserve', name:'Réserve tactique', icon:'◫', cost:0, rarity:'Commune', accent:'rgba(255,215,106,.38)', accentText:'#ffe59b',
+      text:'+1 à la ressource la plus basse. Pioche une carte.',
+      play() { const lows = lowestResources(); gain(lows[Math.floor(Math.random()*lows.length)], 1); drawCards(1); }
+    },
+    blindage: {
+      id:'blindage', name:'Blindage', icon:'⬡', cost:2, rarity:'Spéciale', unlock:0, accent:'rgba(240,169,95,.5)', accentText:'#ffc98e',
+      text:'+5 Structure. Réduit de 1 tous les dégâts de la menace de cette nuit.',
+      play(g) { gain('structure', 5); g.shield += 1; logMsg('Blindage actif : dégâts réduits de 1.'); }
+    },
+    synthese: {
+      id:'synthese', name:'Synthèse', icon:'✦', cost:2, rarity:'Spéciale', unlock:0, accent:'rgba(107,216,255,.5)', accentText:'#9ee8ff',
+      text:'+2 Clarté. Pioche deux cartes supplémentaires.',
+      play() { gain('clarte', 2); drawCards(2); }
+    },
+    ferveur: {
+      id:'ferveur', name:'Ferveur', icon:'✺', cost:2, rarity:'Spéciale', unlock:0, accent:'rgba(217,140,255,.5)', accentText:'#e8b8ff',
+      text:'+5 Élan. Si l’Élan dépasse 9, gagne +1 aux deux autres ressources.',
+      play(g) { gain('elan', 5); if (g.res.elan > 9) { gain('structure',1); gain('clarte',1); } }
+    },
+    compromis: {
+      id:'compromis', name:'Compromis viable', icon:'△', cost:2, rarity:'Rare', unlock:5, accent:'rgba(117,231,174,.5)', accentText:'#9af3c6',
+      text:'+2 aux trois ressources. La menace inflige +1 dégât total cette nuit.',
+      play(g) { gain('structure',2); gain('clarte',2); gain('elan',2); g.extraThreat += 1; }
+    },
+    anticipation: {
+      id:'anticipation', name:'Anticipation', icon:'◉', cost:1, rarity:'Rare', unlock:12, accent:'rgba(255,215,106,.5)', accentText:'#ffe59b',
+      text:'Réduit de 2 le plus gros dégât annoncé. Pioche une carte.',
+      play(g) { g.focusShield += 2; drawCards(1); logMsg('Anticipation : le choc principal est réduit.'); }
+    },
+    bascule: {
+      id:'bascule', name:'Bascule', icon:'∞', cost:1, rarity:'Rare', unlock:20, accent:'rgba(255,120,176,.45)', accentText:'#ffabd0',
+      text:'Échange la ressource la plus haute et la plus basse, puis gagne +1 à chacune.',
+      play(g) {
+        const entries = Object.entries(g.res).sort((a,b)=>a[1]-b[1]);
+        const low = entries[0][0], high = entries[2][0];
+        const temp = g.res[low]; g.res[low] = g.res[high]; g.res[high] = temp;
+        gain(low,1); gain(high,1); renderResources();
+      }
+    }
+  };
+
+  const threats = [
+    { name:'Fatigue des fondations', desc:'Les infrastructures vieillissent toutes au même moment. Un sens du timing admirable.', dmg:{structure:3} },
+    { name:'Brouillard logique', desc:'Les rapports se contredisent, les experts aussi, et chacun semble étrangement confiant.', dmg:{clarte:3} },
+    { name:'Désertion silencieuse', desc:'Personne ne panique. Tout le monde part simplement dans la même direction.', dmg:{elan:3} },
+    { name:'Effet domino', desc:'Un petit problème obtient une promotion et devient soudain trois problèmes.', dmg:{structure:2, clarte:1} },
+    { name:'Rumeur parfaite', desc:'Elle est fausse, simple et agréable à croire. Naturellement, elle se répand.', dmg:{clarte:2, elan:1} },
+    { name:'Décision impopulaire', desc:'Le bon choix arrive avec l’excellente fonctionnalité de fâcher tout le monde.', dmg:{structure:1, elan:2} },
+    { name:'Nuit blanche', desc:'La cité fonctionne encore, mais elle commence à faire des choix de fin de réunion.', dmg:{structure:1, clarte:1, elan:1} },
+    { name:'Crise en cascade', desc:'Chaque système dépend précisément de celui qui vient de tomber.', dmg:{structure:2, clarte:2} },
+    { name:'Fausse victoire', desc:'Le problème semble réglé. C’est donc le moment idéal pour qu’il revienne mieux préparé.', dmg:{clarte:1, elan:3} },
+    { name:'Le grand doute', desc:'Rien n’a changé. Pourtant, tout le monde remet tout en question.', dmg:{clarte:2, elan:2} }
+  ];
+
+  const endings = {
+    harmony: { title:'L’Aube équilibrée', text:'La cité atteint le jour sans héros unique ni système sacrifié. Rien n’est spectaculaire, tout fonctionne. C’est presque suspect.' },
+    structure: { title:'La Cité immobile', text:'Tu as bâti quelque chose que rien ne peut briser. Les habitants y sont en sécurité, même si certains cherchent déjà où sont passées les fenêtres.' },
+    clarte: { title:'Le Matin lucide', text:'La cité comprend enfin ses erreurs, ses forces et le prix exact de chaque choix. Elle sait désormais où aller. Elle débat seulement encore du chemin.' },
+    elan: { title:'Le Jour incandescent', text:'La cité avance portée par une énergie impossible à contenir. Les plans seront écrits en marchant. Les prudents détestent déjà cette phrase.' },
+    survival: { title:'Une Aube, quand même', text:'Ce n’est ni élégant ni optimal, mais le soleil se lève sur une cité encore debout. L’Histoire appellera cela une stratégie. Par politesse.' },
+    defeat: { title:'La Nuit gagne', text:'Un équilibre s’effondre et entraîne le reste. La partie est perdue, mais la prochaine commence avec davantage d’options. Le progrès adore les ruines pédagogiques.' }
+  };
+
+  let save = loadSave();
+  let game = null;
+
+  const $ = (id) => document.getElementById(id);
+  const menuScreen = $('menuScreen');
+  const gameScreen = $('gameScreen');
+  const handEl = $('hand');
+  const logEl = $('log');
+
+  function defaultSave() { return { fragments:0, best:0, endings:[], runs:0 }; }
+  function loadSave() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      return raw ? { ...defaultSave(), ...JSON.parse(raw) } : defaultSave();
+    } catch { return defaultSave(); }
+  }
+  function storeSave() { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); updateMeta(); }
+  function updateMeta() {
+    $('metaFragments').textContent = save.fragments;
+    $('metaBest').textContent = save.best;
+    $('metaEndings').textContent = `${save.endings.length}/5`;
+  }
+
+  function shuffled(arr) {
+    const a = [...arr];
+    for (let i=a.length-1; i>0; i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+    return a;
+  }
+
+  function newGame() {
+    game = {
+      turn:1,
+      res:{ structure:START_RESOURCE, clarte:START_RESOURCE, elan:START_RESOURCE },
+      energy:3,
+      deck:shuffled(['fondation','fondation','analyse','analyse','impulsion','impulsion','redistribution','reserve']),
+      discard:[], hand:[], cardsPlayed:0, shield:0, focusShield:0, extraThreat:0, echo:false,
+      score:0, threat:null, finished:false, resolving:false
+    };
+    menuScreen.classList.remove('active');
+    gameScreen.classList.add('active');
+    logEl.innerHTML = '';
+    logMsg('La première nuit commence. La menace, au moins, a la courtoisie de prévenir.');
+    prepareTurn(true);
+  }
+
+  function prepareTurn(initial=false) {
+    if (!initial) game.turn += 1;
+    if (game.turn > TURNS) return endRun(true);
+    game.energy = 3;
+    game.cardsPlayed = 0;
+    game.shield = 0;
+    game.focusShield = 0;
+    game.extraThreat = 0;
+    game.echo = false;
+    game.resolving = false;
+    game.hand = [];
+    drawCards(5);
+    game.threat = chooseThreat();
+    renderAll();
+    logMsg(`Nuit ${game.turn} : ${game.threat.name}.`);
+  }
+
+  function chooseThreat() {
+    const scale = game.turn >= 6 ? 1 : 0;
+    const t = JSON.parse(JSON.stringify(threats[Math.floor(Math.random()*threats.length)]));
+    if (scale) {
+      const keys = Object.keys(t.dmg);
+      t.dmg[keys[Math.floor(Math.random()*keys.length)]] += 1;
+    }
+    return t;
+  }
+
+  function drawCards(n) {
+    for (let i=0; i<n; i++) {
+      if (game.deck.length === 0) {
+        if (game.discard.length === 0) break;
+        game.deck = shuffled(game.discard);
+        game.discard = [];
+        logMsg('La défausse est mélangée dans le paquet.');
+      }
+      game.hand.push(game.deck.pop());
+    }
+    renderHand();
+    renderDeckInfo();
+  }
+
+  function gain(key, amount, silent=false) {
+    const before = game.res[key];
+    game.res[key] = Math.min(MAX_RESOURCE, game.res[key] + amount);
+    const actual = game.res[key] - before;
+    if (!silent && actual > 0) {
+      flashResource(key);
+      floatText(`+${actual}`, key);
+    }
+    renderResources();
+  }
+
+  function lowestResources() {
+    const min = Math.min(...Object.values(game.res));
+    return Object.keys(game.res).filter(k => game.res[k] === min);
+  }
+
+  function playCard(index) {
+    if (!game || game.finished || game.resolving) return;
+    const id = game.hand[index];
+    const card = cards[id];
+    if (!card || card.cost > game.energy) return;
+
+    const cardNode = handEl.children[index];
+    if (cardNode) cardNode.classList.add('played');
+
+    game.energy -= card.cost;
+    card.play(game);
+    game.cardsPlayed += 1;
+    game.score += card.cost * 8 + 3;
+    game.discard.push(id);
+    game.hand.splice(index,1);
+    logMsg(`${card.name} jouée.`);
+    setTimeout(() => { renderAll(); }, 180);
+  }
+
+  function endTurn() {
+    if (!game || game.finished || game.resolving) return;
+    game.resolving = true;
+    $('endTurnBtn').disabled = true;
+    const dmg = {...game.threat.dmg};
+    let maxKey = Object.keys(dmg).sort((a,b)=>dmg[b]-dmg[a])[0];
+    if (maxKey && game.focusShield > 0) dmg[maxKey] = Math.max(0, dmg[maxKey]-game.focusShield);
+    if (game.extraThreat > 0) {
+      const keys = Object.keys(dmg);
+      const k = keys[Math.floor(Math.random()*keys.length)];
+      dmg[k] += game.extraThreat;
+    }
+
+    let totalTaken = 0;
+    Object.entries(dmg).forEach(([key, value]) => {
+      const final = Math.max(0, value - game.shield);
+      game.res[key] = Math.max(0, game.res[key] - final);
+      totalTaken += final;
+      if (final > 0) { flashResource(key); floatText(`-${final}`, key, true); }
+    });
+    game.score += Math.max(0, 35 - totalTaken * 4) + game.energy * 2;
+    renderAll();
+    logMsg(`${game.threat.name} frappe pour ${totalTaken} dégât${totalTaken>1?'s':''}.`);
+
+    if (Object.values(game.res).some(v => v <= 0)) {
+      document.querySelector('.arena').classList.add('shake');
+      setTimeout(()=>document.querySelector('.arena').classList.remove('shake'),400);
+      return setTimeout(()=>endRun(false),450);
+    }
+
+    game.discard.push(...game.hand);
+    game.hand = [];
+    renderHand();
+    if (game.turn >= TURNS) return setTimeout(()=>endRun(true),450);
+    setTimeout(showDraft, 350);
+  }
+
+  function availablePool() {
+    return Object.values(cards).filter(c => (c.unlock || 0) <= save.fragments);
+  }
+
+  function showDraft() {
+    const pool = availablePool();
+    const weighted = [];
+    pool.forEach(c => {
+      const copies = c.rarity === 'Commune' ? 4 : c.rarity === 'Spéciale' ? 2 : 1;
+      for (let i=0;i<copies;i++) weighted.push(c.id);
+    });
+    const picks=[];
+    while (picks.length<3 && weighted.length) {
+      const id = weighted.splice(Math.floor(Math.random()*weighted.length),1)[0];
+      if (!picks.includes(id)) picks.push(id);
+    }
+    const box=$('draftChoices'); box.innerHTML='';
+    picks.forEach(id => {
+      const node=buildCard(cards[id], false);
+      node.classList.add('choice');
+      node.addEventListener('click',()=>{
+        game.discard.push(id);
+        $('draftOverlay').classList.remove('show');
+        logMsg(`${cards[id].name} rejoint le paquet.`);
+        prepareTurn();
+      });
+      box.appendChild(node);
+    });
+    $('draftOverlay').classList.add('show');
+  }
+
+  function determineEnding() {
+    const {structure, clarte, elan}=game.res;
+    if (Math.min(structure,clarte,elan) >= 9 && Math.max(structure,clarte,elan)-Math.min(structure,clarte,elan) <= 3) return 'harmony';
+    const top=Math.max(structure,clarte,elan);
+    if (top === structure && structure >= 10) return 'structure';
+    if (top === clarte && clarte >= 10) return 'clarte';
+    if (top === elan && elan >= 10) return 'elan';
+    return 'survival';
+  }
+
+  function endRun(victory) {
+    if (!game || game.finished) return;
+    game.finished=true;
+    const endingKey = victory ? determineEnding() : 'defeat';
+    const ending = endings[endingKey];
+    const score = Math.max(0, Math.round(game.score + Object.values(game.res).reduce((a,b)=>a+b,0)*4 + (victory?100:0)));
+    const fragments = victory ? 3 + (endingKey==='harmony'?2:0) : Math.max(1, Math.floor(game.turn/3));
+    const oldFragments=save.fragments;
+    save.fragments += fragments;
+    save.best = Math.max(save.best, score);
+    save.runs += 1;
+    if (victory && !save.endings.includes(endingKey)) save.endings.push(endingKey);
+    storeSave();
+
+    $('endingBadge').textContent = victory ? 'Aube atteinte' : 'Partie terminée';
+    $('endingTitle').textContent=ending.title;
+    $('endingText').textContent=ending.text;
+    $('endScore').textContent=score;
+    $('endTurns').textContent=`${Math.min(game.turn,TURNS)}/${TURNS}`;
+    $('endFragments').textContent=`+${fragments}`;
+    $('endDeck').textContent=game.deck.length+game.discard.length+game.hand.length;
+
+    const unlocks=[
+      {at:5,name:'Compromis viable'},
+      {at:12,name:'Anticipation'},
+      {at:20,name:'Bascule'}
+    ].filter(u=>oldFragments<u.at && save.fragments>=u.at);
+    const unlockBox=$('unlockBox');
+    if (unlocks.length) {
+      unlockBox.classList.remove('hidden');
+      unlockBox.textContent=`Nouvelle carte débloquée : ${unlocks.map(u=>u.name).join(', ')}.`;
+    } else unlockBox.classList.add('hidden');
+    $('endOverlay').classList.add('show');
+  }
+
+  function renderAll() {
+    renderResources(); renderHand(); renderThreat(); renderDeckInfo(); renderTurn();
+    $('energyVal').textContent=game.energy;
+    $('endTurnBtn').disabled=false;
+  }
+
+  function renderResources() {
+    if (!game) return;
+    Object.entries(game.res).forEach(([key,value])=>{
+      $(`${key}Val`).textContent=value;
+      $(`${key}Bar`).style.width=`${(value/MAX_RESOURCE)*100}%`;
+    });
+  }
+
+  function renderThreat() {
+    if (!game || !game.threat) return;
+    $('threatName').textContent=game.threat.name;
+    $('threatDesc').textContent=game.threat.desc;
+    const row=$('damageRow'); row.innerHTML='';
+    Object.entries(game.threat.dmg).forEach(([key,val])=>{
+      const d=document.createElement('span'); d.className='damage'; d.style.color=RESOURCE_META[key].color;
+      d.textContent=`-${val} ${RESOURCE_META[key].label}`; row.appendChild(d);
+    });
+  }
+
+  function renderTurn() {
+    $('nightLabel').textContent=`NUIT ${game.turn} / ${TURNS}`;
+    const dots=$('turnDots'); dots.innerHTML='';
+    for(let i=1;i<=TURNS;i++){
+      const d=document.createElement('i'); d.className='dot '+(i<game.turn?'done':i===game.turn?'current':''); dots.appendChild(d);
+    }
+  }
+
+  function renderDeckInfo() {
+    if (!game) return;
+    $('deckInfo').textContent=`Pioche ${game.deck.length} · Défausse ${game.discard.length} · Main ${game.hand.length}`;
+  }
+
+  function buildCard(card, disabled) {
+    const el=document.createElement('div');
+    el.className='card'+(disabled?' disabled':'');
+    el.style.setProperty('--accent',card.accent);
+    el.style.setProperty('--accentText',card.accentText);
+    el.innerHTML=`
+      <div class="card-top"><span class="type">${card.rarity}</span><span class="cost">${card.cost}</span></div>
+      <div class="card-icon">${card.icon}</div>
+      <div class="card-name">${card.name}</div>
+      <div class="card-text">${card.text}</div>
+      <div class="card-tag">Coût ${card.cost} énergie</div>`;
+    return el;
+  }
+
+  function renderHand() {
+    if (!game) return;
+    handEl.innerHTML='';
+    game.hand.forEach((id,index)=>{
+      const card=cards[id];
+      const el=buildCard(card,card.cost>game.energy);
+      el.setAttribute('role','button'); el.setAttribute('tabindex','0'); el.setAttribute('aria-label',`${card.name}, coût ${card.cost}`);
+      el.addEventListener('click',()=>playCard(index));
+      el.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){e.preventDefault();playCard(index);} });
+      handEl.appendChild(el);
+    });
+    $('energyVal').textContent=game.energy;
+  }
+
+  function logMsg(msg) {
+    const d=document.createElement('div'); d.textContent=`› ${msg}`; logEl.prepend(d);
+  }
+
+  function flashResource(key) {
+    const el=$(`res-${key}`); el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  }
+
+  function floatText(text,key,negative=false) {
+    const target=$(`res-${key}`); if(!target) return;
+    const r=target.getBoundingClientRect();
+    const f=document.createElement('div'); f.className='float-text'; f.textContent=text;
+    f.style.left=`${r.left+r.width/2-12}px`; f.style.top=`${r.top+18}px`;
+    f.style.color=negative?'#ff7f91':RESOURCE_META[key].color;
+    document.body.appendChild(f); setTimeout(()=>f.remove(),850);
+  }
+
+  function showMenu() {
+    $('endOverlay').classList.remove('show');
+    gameScreen.classList.remove('active'); menuScreen.classList.add('active'); updateMeta();
+  }
+
+  $('startBtn').addEventListener('click',newGame);
+  $('retryBtn').addEventListener('click',()=>{ $('endOverlay').classList.remove('show'); newGame(); });
+  $('menuBtn').addEventListener('click',showMenu);
+  $('endTurnBtn').addEventListener('click',endTurn);
+  $('helpBtn').addEventListener('click',()=>$('helpOverlay').classList.add('show'));
+  $('closeHelpBtn').addEventListener('click',()=>$('helpOverlay').classList.remove('show'));
+  $('resetBtn').addEventListener('click',()=>{
+    if (confirm('Effacer le score, les fragments et les fins découvertes ?')) { save=defaultSave(); storeSave(); }
+  });
+
+  document.addEventListener('keydown',e=>{
+    if (e.key==='Escape') document.querySelectorAll('.overlay.show').forEach(o=>{ if(o.id==='helpOverlay')o.classList.remove('show'); });
+    if (!gameScreen.classList.contains('active') || !game || game.finished) return;
+    if (document.querySelector('.overlay.show')) return;
+    if (/^[1-5]$/.test(e.key)) playCard(Number(e.key)-1);
+    if (e.key==='Enter') endTurn();
+  });
+
+  document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{
+    if(e.target===o && o.id==='helpOverlay') o.classList.remove('show');
+  }));
+
+  // Fond animé, dessiné localement. Aucun réseau, aucun actif externe.
+  const canvas=$('stars'), ctx=canvas.getContext('2d');
+  let particles=[];
+  function resize(){ canvas.width=innerWidth*devicePixelRatio; canvas.height=innerHeight*devicePixelRatio; canvas.style.width=innerWidth+'px'; canvas.style.height=innerHeight+'px'; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); particles=Array.from({length:Math.min(120,Math.floor(innerWidth/8))},()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.4+.2,s:Math.random()*.12+.03,a:Math.random()*.6+.15})); }
+  function animate(){ ctx.clearRect(0,0,innerWidth,innerHeight); for(const p of particles){ p.y-=p.s; if(p.y<-3){p.y=innerHeight+3;p.x=Math.random()*innerWidth;} ctx.globalAlpha=p.a; ctx.fillStyle='#dbe8ff'; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill(); } ctx.globalAlpha=1; requestAnimationFrame(animate); }
+  addEventListener('resize',resize); resize(); animate(); updateMeta();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+LA SEPTIÈME AUBE
+=================
+
+Mini-deckbuilder stratégique autonome.
+
+LANCEMENT
+1. Décompressez l'archive si nécessaire.
+2. Ouvrez "la_septieme_aube.html" dans Chrome, Edge, Firefox ou Safari.
+3. Aucun logiciel, compte ou accès Internet n'est nécessaire.
+
+BUT
+Maintenir Structure, Clarté et Élan au-dessus de zéro pendant sept nuits.
+La menace du tour est toujours visible avant de jouer.
+Après chaque nuit, choisissez une nouvelle carte pour améliorer votre paquet.
+
+COMMANDES
+- Souris ou tactile : cliquez sur les cartes et les boutons.
+- Clavier : touches 1 à 5 pour jouer une carte, Entrée pour terminer le tour.
+
+PROGRESSION
+Les scores, fins et fragments sont conservés localement par le navigateur.
+Des cartes supplémentaires se débloquent à 5, 12 et 20 fragments.
